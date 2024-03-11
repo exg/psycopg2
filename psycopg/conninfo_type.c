@@ -125,6 +125,31 @@ host_get(connInfoObject *self)
 }
 
 
+static const char hostaddr_doc[] =
+"The server IP address of the connection.\n"
+"\n"
+".. seealso:: libpq docs for `PQhostaddr()`__ for details.\n"
+".. __: https://www.postgresql.org/docs/current/static/libpq-status.html"
+    "#LIBPQ-PQHOSTADDR";
+
+static PyObject *
+hostaddr_get(connInfoObject *self)
+{
+#if PG_VERSION_NUM >= 120000
+    const char *val;
+
+    val = PQhostaddr(self->conn->pgconn);
+    if (!val) {
+        Py_RETURN_NONE;
+    }
+    return conn_text_from_chars(self->conn, val);
+#else
+    PyErr_SetString(NotSupportedError, "PQhostaddr not available in libpq < 12");
+    return NULL;
+#endif
+}
+
+
 static const char port_doc[] =
 "The port of the connection.\n"
 "\n"
@@ -536,6 +561,7 @@ static struct PyGetSetDef connInfoObject_getsets[] = {
     { "user", (getter)user_get, NULL, (char *)user_doc },
     { "password", (getter)password_get, NULL, (char *)password_doc },
     { "host", (getter)host_get, NULL, (char *)host_doc },
+    { "hostaddr", (getter)hostaddr_get, NULL, (char *)hostaddr_doc },
     { "port", (getter)port_get, NULL, (char *)port_doc },
     { "options", (getter)options_get, NULL, (char *)options_doc },
     { "dsn_parameters", (getter)dsn_parameters_get, NULL,

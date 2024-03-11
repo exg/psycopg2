@@ -1811,6 +1811,10 @@ class TestConnectionInfo(ConnectingTestCase):
         with self.assertRaises(AttributeError):
             self.conn.info.host = 'override'
 
+    @skip_before_libpq(12, 0)
+    def test_hostaddr(self):
+        self.assertEqual(self.conn.info.hostaddr, "")
+
     def test_port(self):
         self.assert_(isinstance(self.conn.info.port, int))
         self.assert_(self.bconn.info.port is None)
